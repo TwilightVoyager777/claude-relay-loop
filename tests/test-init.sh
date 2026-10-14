@@ -160,6 +160,47 @@ test_inside_existing_repo() {
   assert_absent "$mono/packages/app/.git"
 }
 
+test_team_new() {
+  local d="$WORK/team" f
+  run_init "$d" --team --name "Team App"
+  assert_status 0
+  for f in $CORE_FILES $TEAM_FILES; do assert_file "$d/$f"; done
+  assert_contains "$d/CLAUDE.md" "# Team rules — Team App"
+  assert_contains "$d/CLAUDE.local.md" "## The relay loop: main session and sub-session"
+  assert_eq "$(count_lines "$d/.gitignore" "CLAUDE.local.md")" "1" "CLAUDE.local.md lines in .gitignore"
+  assert_no_placeholders "$d"
+  assert_contains "$OUT" "Created 15, skipped 0."
+  run_init "$d" --team
+  assert_status 0
+  assert_lacks "$OUT" "  create  "
+  assert_lacks "$OUT" "mv CLAUDE.md CLAUDE.local.md"
+  assert_eq "$(count_lines "$d/.gitignore" "CLAUDE.local.md")" "1" "CLAUDE.local.md lines after rerun"
+}
+
+test_team_gitignore_without_trailing_newline() {
+  local d="$WORK/team-gi"
+  mkdir -p "$d"
+  printf 'node_modules' > "$d/.gitignore"
+  run_init "$d" --team
+  assert_status 0
+  assert_eq "$(count_lines "$d/.gitignore" "node_modules")" "1" "node_modules line"
+  assert_eq "$(count_lines "$d/.gitignore" "CLAUDE.local.md")" "1" "CLAUDE.local.md line"
+}
+
+test_team_after_solo() {
+  local d="$WORK/solo-then-team"
+  run_init "$d"
+  run_init "$d" --team
+  assert_status 0
+  assert_contains "$OUT" "mv CLAUDE.md CLAUDE.local.md"
+  assert_contains "$d/CLAUDE.md" "## The relay loop: main session and sub-session"
+  mv "$d/CLAUDE.md" "$d/CLAUDE.local.md"
+  run_init "$d" --team
+  assert_status 0
+  assert_contains "$d/CLAUDE.md" "# Team rules"
+  assert_lacks "$OUT" "mv CLAUDE.md CLAUDE.local.md"
+}
+
 while IFS= read -r t; do
   printf '%s\n' "$t"
   "$t"
