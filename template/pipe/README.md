@@ -54,7 +54,7 @@ The Claude Code main session writes this when the feature is done. The owner pas
 F003 CSV export is done.
 Cards: F003-T01, F003-T02. Merged into main: yes (a1b2c3d).
 Tests: full suite passing (212 tests).
-Read: pipe/claudecode/latest.md › Done & decided (deviations), Need to know or answer.
+Read: COWORK.md if you haven't this session, then pipe/claudecode/latest.md › Done & decided (deviations), Need to know or answer.
 Unverified: exports of more than 100,000 rows were not tried.
 Needs your decision: accept deviation 2 (dates exported as ISO 8601)?
 Please update the plan status, task table and roadmap, then give me the Message to Claude Code for the next feature.

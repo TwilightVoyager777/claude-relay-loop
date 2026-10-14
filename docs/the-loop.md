@@ -1,6 +1,6 @@
 # One feature, start to finish
 
-This walkthrough follows one feature through the loop in a made-up project, **Recipe Box**, a small web app for saving recipes. Every message below is an example of what you would actually paste.
+This walkthrough follows one feature through the loop in a made-up project, **Recipe Box**, a small web app for saving recipes. The messages below are examples of what you would actually paste.
 
 ## 0. Set up
 
@@ -31,7 +31,7 @@ Cowork reads the folder, then asks a few questions at a time: what the app is fo
 - Status: authorized (owner, 2026-10-14)
 ```
 
-Then it gives you:
+Then it asks you to commit the planning files (Claude Code may start from a fresh checkout), and gives you:
 
 ```text
 F001 Ingredient search — main session kickoff
@@ -54,17 +54,18 @@ Open the Code tab in the Claude desktop app on the same folder, start a new sess
 You are the execution sub-session for card F001-T01.
 Plan: pipe/claudecode/plans/2026-10-14-F001-T01-ingredient-search.md
 Branch: feat/F001-T01-ingredient-search (create it from main)
-Read CLAUDE.md first and follow its "Sub-session" section.
-Execute the plan task by task. Commit after each task and update pipe/claudecode/latest.md and today's log.
+Read CLAUDE.md (and CLAUDE.local.md if it exists) first and follow its "Sub-session" section.
+Work in this checkout, on that branch: don't create a worktree.
+Execute the plan task by task. After each task, update pipe/claudecode/latest.md and today's log, and commit them with the task's changes.
 When the whole plan is done, run the full test suite, then stop and report: commits, test counts, deviations, anything unverified.
-Don't merge or delete branches.
+Don't merge, open pull requests or delete branches.
 ```
 
 Then it waits. It doesn't poll: the app wakes it when the sub-session stops.
 
 ## 3. Sub-session (Claude Code)
 
-The sub-session works through the plan one task at a time: failing test, implementation, passing test, commit, handoff update. You can open it from the sidebar whenever you like, to watch or to talk to it. When it's done, it reports to the main session.
+The sub-session works through the plan one task at a time: failing test, implementation, passing test, handoff update, commit. You can open it from the sidebar whenever you like, to watch or to talk to it. When it's done, it reports to the main session.
 
 ## 4. Verify and report (main session)
 
@@ -80,7 +81,7 @@ With every authorized card done and merged, the main session gives you:
 F001 Ingredient search is done.
 Cards: F001-T01. Merged into main: yes (4f2c9e1).
 Tests: full suite passing (48 tests).
-Read: pipe/claudecode/latest.md › Done & decided (deviations), Need to know or answer.
+Read: COWORK.md if you haven't this session, then pipe/claudecode/latest.md › Done & decided (deviations), Need to know or answer.
 Unverified: not tried with more than 500 recipes.
 Needs your decision: accept the deviation (search also matches recipe titles)?
 Please update the plan status, task table and roadmap, then give me the Message to Claude Code for the next feature.

@@ -17,7 +17,7 @@ Out: <…>
 ## Acceptance
 - [ ] <A check anyone can run or see.>
 
-## Prerequisites and open questions
+## Prerequisites / open questions
 <What must exist first; what is still undecided.>
 
 Rules for teammates: `CLAUDE.md` in the repository root.

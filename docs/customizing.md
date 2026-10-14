@@ -13,14 +13,14 @@ By default Claude Code adds a co-author line to commits and a note to pull reque
 }
 ```
 
-If the file already exists, `init.sh` leaves it alone and prints this snippet for you to merge. The file is committed, so it applies to everyone who works in the repository with Claude Code.
+If the file already exists, `init.sh` leaves it alone and prints this snippet for you to merge. The file isn't git-ignored: once you commit it, it applies to everyone who works in the repository with Claude Code.
 
 ## Push after every commit (`--auto-push`)
 
 Adds `.claude/hooks/auto-push.sh` and wires it up as a `PostToolUse` hook in `.claude/settings.local.json`, which is git-ignored and only affects you. After any Bash command Claude Code runs that contains `git commit`, the hook runs `git push -u origin HEAD` and shows the last line of the result.
 
 - The hook needs `jq` when it runs.
-- It pushes whatever branch is checked out to `origin`. If you don't want every commit on the remote right away, don't use it.
+- It pushes whatever branch is checked out to `origin`. That includes `main` when the main session commits a plan there. If you don't want every commit on the remote right away, don't use it.
 - To turn it off, delete the `hooks` entry from `.claude/settings.local.json`.
 
 ## The loop's defaults
@@ -36,11 +36,10 @@ The rule files are in English, and both layers already reply in your language. T
 
 ## Adding the team add-on later
 
-Running `init.sh --team` on a project that already has the solo setup skips `CLAUDE.md`, because it exists, and tells you how to switch:
+Running `init.sh --team` on a project that already has the solo setup skips `CLAUDE.md`, because it exists, and prints the command to switch, with your paths and project name filled in. It looks like this:
 
 ```bash
-mv CLAUDE.md CLAUDE.local.md
-claude-relay-loop/init.sh path/to/my-project --team
+mv path/to/my-project/CLAUDE.md path/to/my-project/CLAUDE.local.md && claude-relay-loop/init.sh path/to/my-project --team --name "My Project"
 ```
 
 `CLAUDE.local.md` then holds your own loop rules (git-ignored), and the new `CLAUDE.md` holds the shared rules for teammates.

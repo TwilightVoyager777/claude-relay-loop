@@ -43,7 +43,7 @@ One loop per feature (`F001`, `F002`, …). Session titles start with the F numb
 
 ```
 my-project/
-├── COWORK.md            # rules for the planning layer (Cowork reads it at the start of every session)
+├── COWORK.md            # rules for the planning layer (start every Cowork session with "Read COWORK.md")
 ├── CLAUDE.md            # rules for the implementation layer (Claude Code loads it automatically)
 ├── roadmap.md           # goal, users, current focus, next, later
 ├── features/
@@ -61,7 +61,7 @@ Your code goes wherever you like. Cowork edits only the planning files; Claude C
 
 - The **Claude desktop app** with Cowork and Claude Code (the Code tab). Starting a sub-session from the main session needs the desktop app.
 - The **Claude Code CLI or an IDE extension** also works: the main session prints the sub-session's brief, and you paste it into a second session yourself.
-- `bash` 3.2 or later, `git` and `perl` for `init.sh`. They come with macOS and most Linux distributions. `jq` only for `--auto-push`.
+- `bash` 3.2 or later, `git` and `perl` for `init.sh`. Most Linux distributions have them; on macOS, `git` comes with the Command Line Tools (`xcode-select --install`). `jq` only for `--auto-push`.
 - Optional: the superpowers plugin for Claude Code. The rules use its planning and execution skills when it's installed, and a plain plan skeleton when it isn't.
 
 ## Quick start
@@ -72,7 +72,7 @@ claude-relay-loop/init.sh ~/code/my-project --name "My Project"
 ```
 
 1. Open Cowork on `~/code/my-project` and say: **Read COWORK.md and onboard me.**
-   Cowork asks a few questions, writes the roadmap, the first feature plan and the first task card, and gives you a **Message to Claude Code**.
+   Cowork asks a few questions, writes the roadmap, the first feature plan and the first task card, asks you to commit them, and gives you a **Message to Claude Code**.
 2. In the Claude desktop app, open the Code tab on the same folder, start a new session, and paste the message.
    That session renames itself `F001 …`, writes the plan, starts the sub-session, and verifies the result.
 3. When the feature is done, it gives you a **Message to Cowork**. Paste it into Cowork, and the loop starts again.
@@ -81,7 +81,7 @@ claude-relay-loop/init.sh ~/code/my-project --name "My Project"
 
 ### Existing projects
 
-Run the same command on the project's folder. `init.sh` never overwrites a file: anything that already exists, such as your own `CLAUDE.md`, is skipped and listed together with the scaffold's copy to merge from by hand. Try `--dry-run` first to see what would happen.
+Run the same command on the project's folder. `init.sh` never overwrites a file: anything that already exists, such as your own `CLAUDE.md`, is skipped and listed together with the scaffold's copy to merge from by hand. If your `CLAUDE.md` doesn't have the loop rules yet, `init.sh` says so: copy them in, or Claude Code won't follow the loop. Try `--dry-run` first to see what would happen.
 
 ## Options
 

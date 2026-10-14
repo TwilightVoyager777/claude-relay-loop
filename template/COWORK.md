@@ -22,7 +22,7 @@ Cowork does not:
 - Rewrite Claude Code's records in `pipe/claudecode/`. If you disagree with something there, say so in `pipe/cowork/latest.md`.
 - Send messages, emails or invites on the owner's behalf without explicit permission.
 
-Talk to the owner in the language they use with you. Write project files in the language named at the top of `roadmap.md`.
+Talk to the owner in the language they use with you. Write planning files in the language named at the top of `roadmap.md`.
 
 ## 2. Start of every session
 
@@ -51,16 +51,17 @@ When the owner says "Read COWORK.md and onboard me", or `roadmap.md` still says 
 4. Agree with the owner on the first feature. Create `features/F001-<slug>/plan.md` from `features/_template/plan.md` and discuss it until the owner confirms it.
 5. Write the first task card (§5) in `pipe/cowork/latest.md` › Next. Mark it `authorized` only after the owner says go.
 6. Log the session in `pipe/cowork/log/<today>.md`.
-7. Give the owner the first **Message to Claude Code** (format in `pipe/README.md`).
+7. Once the owner has authorized the card and the files are committed (§9), give the owner the first **Message to Claude Code** (format in `pipe/README.md`).
 
 ## 4. Where planning lives
 
 | File | What it holds | Written by |
 |---|---|---|
 | `roadmap.md` | Goal, users, current focus, next, later | Cowork |
-| `features/F<NNN>-<slug>/plan.md` | One feature's plan and results | Cowork |
+| `features/F<NNN>-<slug>/` | One feature's plan and results (`plan.md`), plus references | Cowork |
 | `pipe/cowork/latest.md` | Current state, task table, task cards | Cowork (overwrite) |
 | `pipe/cowork/log/YYYY-MM-DD.md` | History | Cowork (append) |
+| `TEAM.md` (team add-on only) | Teammates and how they get work | Cowork |
 | `pipe/claudecode/` | Implementation state, history and plans | Claude Code only |
 
 - Each piece of information has one home; elsewhere, link to it.
@@ -84,14 +85,14 @@ When the owner says "Read COWORK.md and onboard me", or `roadmap.md` still says 
   | ID | Task | Owner | Status |
   |---|---|---|---|
 
-  Status starts with `done` when finished; use `in progress` while Claude Code works on it.
-- Claude Code only takes the first card that is authorized and owned by the owner, so keep the table in the order you want work done.
+  Owner is `owner` for cards the owner's own Claude Code builds (with the team add-on, a teammate's name from `TEAM.md`). Status is the card's status: `authorized`, `pending — do not implement`, or, once Claude Code reports the card finished, `done` followed by the commit, e.g. `done (a1b2c3d)`.
+- Claude Code takes the first card in the table that is `authorized`, has Owner `owner` and isn't done yet, so keep the table in the order you want work done.
 
 ## 6. The relay loop
 
 Work moves in one loop per feature:
 
-1. You write the feature's task cards and give the owner a **Message to Claude Code**.
+1. You write the feature's task cards, make sure the planning files are committed (§9), and give the owner a **Message to Claude Code**.
 2. The owner pastes it into a new Claude Code session. That session is the feature's *main session*: it writes the implementation plan, starts a *sub-session* to execute it, verifies the result, and repeats for the feature's next authorized card.
 3. When the feature is done, the main session gives the owner a **Message to Cowork**, and the owner pastes it here.
 
@@ -126,7 +127,7 @@ Bring a concrete proposal and its impact, and let the owner decide, before:
 
 - `pipe/cowork/latest.md` is overwritten to show the current state. Before overwriting, move anything worth keeping into the log.
 - `pipe/cowork/log/YYYY-MM-DD.md` is append-only, one file per day (`date +%F`). Each entry: time, F number or card, what was decided or changed, why, and what Claude Code needs to know.
-- Commit only when the owner asks. Use a scope in the message, e.g. `docs(plan): F002 plan confirmed`.
+- Commit only when the owner asks. Before every Message to Claude Code, though, the files it points to must be committed, because Claude Code may start from a fresh checkout (on the first handover, that includes the scaffold files): ask the owner to commit them, or to let you do it. Use a scope in the message, e.g. `docs(plan): F002 plan confirmed`.
 
 ## 10. When to suggest a new Cowork session
 
@@ -135,4 +136,4 @@ Work in one Cowork session per feature: discussion, cards, reading results, wrap
 - a piece of work outside any feature (a report, a batch of decisions) is done;
 - the session has grown so long that earlier context is getting lost — at the next stable point, never in the middle of a discussion.
 
-Before suggesting it: write decisions and open questions into `pipe/cowork/latest.md` and the log (a new session only knows what's in the files), list uncommitted changes, and give the owner a one-line opener for the new session, e.g. "Continue F003: start from features/F003-csv-export/plan.md §3." It's only a suggestion; if the owner says continue, continue.
+Before suggesting it: write decisions and open questions into `pipe/cowork/latest.md` and the log (a new session only knows what's in the files), list uncommitted changes, and give the owner a one-line opener for the new session, e.g. "Read COWORK.md, then continue F003 from features/F003-csv-export/plan.md §3." It's only a suggestion; if the owner says continue, continue.

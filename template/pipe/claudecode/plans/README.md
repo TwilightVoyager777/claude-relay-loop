@@ -26,10 +26,10 @@ Steps:
 2. Run <command>; expect it to fail with <message>.
 3. Implement: <code, or an exact description>
 4. Run <command>; expect <N> passing.
-5. Commit `<message>`, then update pipe/claudecode/latest.md and today's log.
+5. Update pipe/claudecode/latest.md and today's log, then commit them with the task's changes: `<message>`.
 
 ### Task N: Full check and handoff
 1. Run <full test command>; expect <counts>.
-2. Write pipe/claudecode/latest.md (deviations, unverified items, questions) and today's log.
+2. Write pipe/claudecode/latest.md (deviations, unverified items, questions) and today's log, and commit them.
 3. Stop and report to the main session.
 ~~~
