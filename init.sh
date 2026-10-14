@@ -126,6 +126,9 @@ SKIPPED=0
 SKIPPED_LIST=""
 LOCAL_CREATED=0
 TEAM_CLAUDE_SKIPPED=0
+RULES_SKIPPED=0
+RULES_DEST="CLAUDE.md"
+if [ "$TEAM" = 1 ]; then RULES_DEST="CLAUDE.local.md"; fi
 
 if [ "$DRY_RUN" = 1 ]; then echo "Dry run: nothing will be written."; fi
 echo "Setting up claude-relay-loop in $TARGET_ABS"
@@ -135,9 +138,10 @@ while IFS=$'\t' read -r src dest; do
   if [ -e "$TARGET_ABS/$dest" ]; then
     echo "  skip    $dest (already exists)"
     SKIPPED=$((SKIPPED + 1))
-    SKIPPED_LIST="$SKIPPED_LIST    $dest  <-  ${src#"$SCRIPT_DIR"/}
+    SKIPPED_LIST="$SKIPPED_LIST    $dest  <-  $src
 "
     if [ "$TEAM" = 1 ] && [ "$dest" = "CLAUDE.md" ]; then TEAM_CLAUDE_SKIPPED=1; fi
+    if [ "$dest" = "$RULES_DEST" ]; then RULES_SKIPPED=1; fi
     continue
   fi
   echo "  create  $dest"
@@ -233,10 +237,14 @@ if [ -n "$SKIPPED_LIST" ]; then
   echo "Existing files were left untouched. To merge by hand, compare them with the scaffold's copy:"
   printf '%s' "$SKIPPED_LIST"
 fi
+if [ "$RULES_SKIPPED" = 1 ] && ! grep -qsF -- "## The relay loop: main session and sub-session" "$TARGET_ABS/CLAUDE.md" "$TARGET_ABS/CLAUDE.local.md"; then
+  echo "Note: your $RULES_DEST doesn't have the relay-loop rules, so Claude Code won't follow the loop yet."
+  echo "  Copy in everything below the title line of $TEMPLATE_DIR/CLAUDE.md."
+fi
 if [ "$TEAM_CLAUDE_SKIPPED" = 1 ] && [ "$LOCAL_CREATED" = 1 ]; then
   echo "Team setup: CLAUDE.md already exists, so the shared team rules were not written."
   echo "  If it holds the relay-loop rules from a solo setup, switch with:"
-  echo "    mv CLAUDE.md CLAUDE.local.md && $0 \"$TARGET\" --team"
+  printf '    mv %q %q && %q %q --team --name %q\n' "$TARGET_ABS/CLAUDE.md" "$TARGET_ABS/CLAUDE.local.md" "$SCRIPT_DIR/init.sh" "$TARGET_ABS" "$NAME"
 fi
 if [ "$DRY_RUN" = 0 ]; then
   echo

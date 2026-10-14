@@ -97,7 +97,8 @@ test_existing_project_is_not_overwritten() {
   assert_status 0
   if cmp -s "$d/CLAUDE.md" "$WORK/claude-before"; then ok; else fail "existing CLAUDE.md was changed"; fi
   assert_contains "$OUT" "skip    CLAUDE.md (already exists)"
-  assert_contains "$OUT" "template/CLAUDE.md"
+  assert_contains "$OUT" "$ROOT/template/CLAUDE.md"
+  assert_contains "$OUT" "doesn't have the relay-loop rules"
   assert_file "$d/COWORK.md"
   assert_eq "$(git -C "$d" rev-list --count HEAD)" "1" "commit count"
   assert_contains "$OUT" "already a git repository"
@@ -110,6 +111,7 @@ test_rerun_skips_everything() {
   run_init "$d"
   assert_status 0
   assert_lacks "$OUT" "  create  "
+  assert_lacks "$OUT" "doesn't have the relay-loop rules"
   assert_contains "$OUT" "Created 0, skipped 11."
 }
 
@@ -173,7 +175,7 @@ test_team_new() {
   run_init "$d" --team
   assert_status 0
   assert_lacks "$OUT" "  create  "
-  assert_lacks "$OUT" "mv CLAUDE.md CLAUDE.local.md"
+  assert_lacks "$OUT" "switch with:"
   assert_eq "$(count_lines "$d/.gitignore" "CLAUDE.local.md")" "1" "CLAUDE.local.md lines after rerun"
 }
 
@@ -192,13 +194,28 @@ test_team_after_solo() {
   run_init "$d"
   run_init "$d" --team
   assert_status 0
-  assert_contains "$OUT" "mv CLAUDE.md CLAUDE.local.md"
+  assert_contains "$OUT" "switch with:"
   assert_contains "$d/CLAUDE.md" "## The relay loop: main session and sub-session"
   mv "$d/CLAUDE.md" "$d/CLAUDE.local.md"
   run_init "$d" --team
   assert_status 0
   assert_contains "$d/CLAUDE.md" "# Team rules"
-  assert_lacks "$OUT" "mv CLAUDE.md CLAUDE.local.md"
+  assert_lacks "$OUT" "switch with:"
+}
+
+test_team_switch_hint_works_from_another_folder() {
+  local d="$WORK/switch" other="$WORK/switch-cwd" hint
+  mkdir -p "$other"
+  printf 'unrelated\n' > "$other/CLAUDE.md"
+  run_init "$d" --name "Switch App"
+  run_init "$d" --team --name "Switch App"
+  hint="$(grep -A1 -F 'switch with:' "$OUT" | tail -n 1)"
+  STATUS=0
+  (cd "$other" && eval "$hint") >/dev/null 2>&1 || STATUS=$?
+  assert_status 0
+  assert_eq "$(cat "$other/CLAUDE.md" 2>/dev/null)" "unrelated" "CLAUDE.md in the folder the hint ran from"
+  assert_contains "$d/CLAUDE.md" "# Team rules — Switch App"
+  assert_contains "$d/CLAUDE.local.md" "## The relay loop: main session and sub-session"
 }
 
 test_no_attribution() {
