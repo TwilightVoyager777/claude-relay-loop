@@ -201,6 +201,53 @@ test_team_after_solo() {
   assert_lacks "$OUT" "mv CLAUDE.md CLAUDE.local.md"
 }
 
+test_no_attribution() {
+  local d="$WORK/attr" e="$WORK/attr-existing"
+  run_init "$d" --no-attribution
+  assert_status 0
+  if jq -e '.attribution.commit == "" and .attribution.pr == ""' "$d/.claude/settings.json" >/dev/null 2>&1; then ok; else fail "settings.json attribution"; fi
+  mkdir -p "$e/.claude"
+  printf '{"x": 1}\n' > "$e/.claude/settings.json"
+  run_init "$e" --no-attribution
+  assert_status 0
+  assert_eq "$(cat "$e/.claude/settings.json")" '{"x": 1}' "existing settings.json"
+  assert_contains "$OUT" '"attribution"'
+}
+
+test_auto_push_setup() {
+  local d="$WORK/push" e="$WORK/push-existing"
+  run_init "$d" --auto-push
+  assert_status 0
+  if jq -e '.hooks.PostToolUse[0].matcher == "Bash" and (.hooks.PostToolUse[0].hooks[0].command | contains(".claude/hooks/auto-push.sh"))' "$d/.claude/settings.local.json" >/dev/null 2>&1; then ok; else fail "settings.local.json hook"; fi
+  if [ -x "$d/.claude/hooks/auto-push.sh" ]; then ok; else fail "auto-push.sh is not executable"; fi
+  assert_eq "$(count_lines "$d/.gitignore" ".claude/settings.local.json")" "1" "settings.local.json in .gitignore"
+  mkdir -p "$e/.claude"
+  printf '{}\n' > "$e/.claude/settings.local.json"
+  run_init "$e" --auto-push
+  assert_status 0
+  assert_eq "$(cat "$e/.claude/settings.local.json")" '{}' "existing settings.local.json"
+  assert_contains "$OUT" "PostToolUse"
+}
+
+test_auto_push_hook_pushes() {
+  local d="$WORK/hook" remote="$WORK/hook-remote.git" out branch
+  git init -q --bare "$remote"
+  run_init "$d" --auto-push
+  git -C "$d" remote add origin "$remote"
+  printf 'x\n' > "$d/x.txt"
+  git -C "$d" add x.txt
+  git -C "$d" commit -q -m "test commit"
+  branch="$(git -C "$d" symbolic-ref --short HEAD)"
+  out="$(printf '%s' '{"tool_input":{"command":"git commit -m test"}}' | CLAUDE_PROJECT_DIR="$d" "$TEST_BASH" "$d/.claude/hooks/auto-push.sh")"
+  assert_eq "$(git -C "$remote" rev-parse "refs/heads/$branch" 2>/dev/null)" "$(git -C "$d" rev-parse HEAD)" "remote branch after the hook"
+  case "$(printf '%s' "$out" | jq -r .systemMessage)" in
+    "auto push:"*) ok ;;
+    *) fail "hook message: $out" ;;
+  esac
+  out="$(printf '%s' '{"tool_input":{"command":"ls -la"}}' | CLAUDE_PROJECT_DIR="$d" "$TEST_BASH" "$d/.claude/hooks/auto-push.sh")"
+  assert_eq "$out" "" "hook output for a command that isn't a commit"
+}
+
 while IFS= read -r t; do
   printf '%s\n' "$t"
   "$t"
