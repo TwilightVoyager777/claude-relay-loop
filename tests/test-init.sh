@@ -97,7 +97,7 @@ test_existing_project_is_not_overwritten() {
   assert_status 0
   if cmp -s "$d/CLAUDE.md" "$WORK/claude-before"; then ok; else fail "existing CLAUDE.md was changed"; fi
   assert_contains "$OUT" "skip    CLAUDE.md (already exists)"
-  assert_contains "$OUT" "$ROOT/template/CLAUDE.md"
+  assert_contains "$OUT" "$ROOT/template/en/CLAUDE.md"
   assert_contains "$OUT" "doesn't have the relay-loop rules"
   assert_file "$d/COWORK.md"
   assert_eq "$(git -C "$d" rev-list --count HEAD)" "1" "commit count"

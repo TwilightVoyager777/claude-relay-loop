@@ -8,8 +8,8 @@ set -euo pipefail
 
 VERSION="0.1.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
-TEMPLATE_DIR="$SCRIPT_DIR/template"
-TEAM_DIR="$SCRIPT_DIR/addons/team"
+TEMPLATE_DIR="$SCRIPT_DIR/template/en"
+TEAM_DIR="$SCRIPT_DIR/addons/team/en"
 AUTO_PUSH_SCRIPT="$SCRIPT_DIR/addons/auto-push/auto-push.sh"
 
 usage() {
