@@ -1,0 +1,4 @@
+Next steps:
+  1. Open Cowork on this folder: <folder>
+  2. Say: Read COWORK.md and onboard me.
+  3. Cowork will give you a "Message to Claude Code". Paste it into a new Claude Code session in the same folder.

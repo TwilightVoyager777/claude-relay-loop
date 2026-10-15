@@ -1,0 +1,4 @@
+下一步：
+  1. 用 Cowork 打开这个文件夹：<folder>
+  2. 对 Cowork 说：读一下 COWORK.md，带我开始
+  3. Cowork 会给你一段「发给 Claude Code 的话」。在同一个文件夹里新开一个 Claude Code 会话，把它贴进去。

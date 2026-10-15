@@ -8,9 +8,9 @@ set -euo pipefail
 
 VERSION="0.1.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
-TEMPLATE_DIR="$SCRIPT_DIR/template/en"
-TEAM_DIR="$SCRIPT_DIR/addons/team/en"
 AUTO_PUSH_SCRIPT="$SCRIPT_DIR/addons/auto-push/auto-push.sh"
+# The loop rules (template/<lang>/CLAUDE.md) carry this line in every language.
+RULES_MARKER="<!-- relay-loop:rules -->"
 
 usage() {
   cat <<'EOF'
@@ -21,6 +21,9 @@ Existing files are never overwritten; they are listed as skipped.
 
 Options:
   --name <name>       Project name used in the files (default: the folder name)
+  --lang <en|zh>      Language of the generated files: en (English) or zh
+                      (Simplified Chinese). Default: en, or for a project set up
+                      before, the language it was set up in
   --team              Add the team add-on: shared CLAUDE.md for teammates,
                       your own loop rules in CLAUDE.local.md (git-ignored)
   --no-attribution    Write .claude/settings.json that turns off AI attribution
@@ -52,8 +55,25 @@ abs_path() {
   printf '%s%s\n' "$(cd "$p" && pwd -P)" "$rest"
 }
 
+# Quote $1 for a command line the user may copy: single quotes, any ' inside as '\''.
+# (printf %q garbles non-ASCII names and paths in bash 3.2.)
+shell_quote() {
+  printf "'%s'" "$(printf '%s' "$1" | sed "s/'/'\\\\''/g")"
+}
+
+# --lang value -> folder name under template/, addons/team/ and messages/
+lang_dir() {
+  case "$1" in
+    en) echo "en" ;;
+    zh) echo "zh-CN" ;;
+    *) return 1 ;;
+  esac
+}
+
 TARGET=""
 NAME=""
+LOOP_LANG="en"
+LANG_GIVEN=0
 TEAM=0
 NO_ATTRIBUTION=0
 AUTO_PUSH=0
@@ -67,6 +87,13 @@ while [ $# -gt 0 ]; do
       shift 2
       ;;
     --name=*) NAME="${1#--name=}"; shift ;;
+    --lang)
+      [ $# -ge 2 ] || die "--lang needs a value: en or zh"
+      LOOP_LANG="$2"
+      LANG_GIVEN=1
+      shift 2
+      ;;
+    --lang=*) LOOP_LANG="${1#--lang=}"; LANG_GIVEN=1; shift ;;
     --team) TEAM=1; shift ;;
     --no-attribution) NO_ATTRIBUTION=1; shift ;;
     --auto-push) AUTO_PUSH=1; shift ;;
@@ -82,12 +109,12 @@ while [ $# -gt 0 ]; do
   esac
 done
 
+lang_dir "$LOOP_LANG" >/dev/null || die "unknown language: $LOOP_LANG (use en or zh)"
+
 if [ -z "$TARGET" ]; then
   usage >&2
   exit 2
 fi
-[ -d "$TEMPLATE_DIR" ] || die "template/ not found next to init.sh ($SCRIPT_DIR)"
-if [ "$TEAM" = 1 ] && [ ! -d "$TEAM_DIR" ]; then die "addons/team/ not found next to init.sh"; fi
 if [ "$AUTO_PUSH" = 1 ] && [ ! -f "$AUTO_PUSH_SCRIPT" ]; then die "addons/auto-push/auto-push.sh not found next to init.sh"; fi
 command -v perl >/dev/null 2>&1 || die "perl is required"
 if [ -e "$TARGET" ] && [ ! -d "$TARGET" ]; then die "$TARGET exists and is not a directory"; fi
@@ -97,6 +124,39 @@ case "$TARGET_ABS/" in
   "$SCRIPT_DIR/"*) die "the target is inside the scaffold itself ($SCRIPT_DIR); pick your project's folder" ;;
 esac
 [ -n "$NAME" ] || NAME="$(basename "$TARGET_ABS")"
+
+# A project set up before keeps its language: the one whose COWORK.md title it has.
+SETUP_LANG=""
+if [ -f "$TARGET_ABS/COWORK.md" ]; then
+  first_line="$(head -n 1 "$TARGET_ABS/COWORK.md")"
+  for l in en zh; do
+    src="$SCRIPT_DIR/template/$(lang_dir "$l")/COWORK.md"
+    [ -f "$src" ] || continue
+    title="$(head -n 1 "$src")"
+    title="${title%%\{\{PROJECT_NAME\}\}*}"
+    [ -n "$title" ] || continue
+    case "$first_line" in
+      "$title"*) SETUP_LANG="$l"; break ;;
+    esac
+  done
+fi
+LANG_NOTE=""
+if [ -n "$SETUP_LANG" ] && [ "$SETUP_LANG" != "$LOOP_LANG" ]; then
+  if [ "$LANG_GIVEN" = 0 ]; then
+    LOOP_LANG="$SETUP_LANG"
+    LANG_NOTE="  note    --lang $LOOP_LANG: the language this project was set up in"
+  else
+    LANG_NOTE="  note    this project was set up with --lang $SETUP_LANG; files added now are --lang $LOOP_LANG"
+  fi
+fi
+
+LANG_DIR="$(lang_dir "$LOOP_LANG")"
+TEMPLATE_DIR="$SCRIPT_DIR/template/$LANG_DIR"
+TEAM_DIR="$SCRIPT_DIR/addons/team/$LANG_DIR"
+MESSAGES="$SCRIPT_DIR/messages/$LANG_DIR.txt"
+[ -d "$TEMPLATE_DIR" ] || die "template/$LANG_DIR/ not found next to init.sh ($SCRIPT_DIR)"
+[ -f "$MESSAGES" ] || die "messages/$LANG_DIR.txt not found next to init.sh"
+if [ "$TEAM" = 1 ] && [ ! -d "$TEAM_DIR" ]; then die "addons/team/$LANG_DIR/ not found next to init.sh"; fi
 TODAY="$(date +%F)"
 
 PLAN="$(mktemp "${TMPDIR:-/tmp}/relay-loop.XXXXXX")"
@@ -132,6 +192,7 @@ if [ "$TEAM" = 1 ]; then RULES_DEST="CLAUDE.local.md"; fi
 
 if [ "$DRY_RUN" = 1 ]; then echo "Dry run: nothing will be written."; fi
 echo "Setting up claude-relay-loop in $TARGET_ABS"
+if [ -n "$LANG_NOTE" ]; then echo "$LANG_NOTE"; fi
 if [ "$DRY_RUN" = 0 ]; then mkdir -p "$TARGET_ABS"; fi
 
 while IFS=$'\t' read -r src dest; do
@@ -237,19 +298,22 @@ if [ -n "$SKIPPED_LIST" ]; then
   echo "Existing files were left untouched. To merge by hand, compare them with the scaffold's copy:"
   printf '%s' "$SKIPPED_LIST"
 fi
-if [ "$RULES_SKIPPED" = 1 ] && ! grep -qsF -- "## The relay loop: main session and sub-session" "$TARGET_ABS/CLAUDE.md" "$TARGET_ABS/CLAUDE.local.md"; then
+if [ "$RULES_SKIPPED" = 1 ] && ! grep -qsF -- "$RULES_MARKER" "$TARGET_ABS/CLAUDE.md" "$TARGET_ABS/CLAUDE.local.md"; then
   echo "Note: your $RULES_DEST doesn't have the relay-loop rules, so Claude Code won't follow the loop yet."
   echo "  Copy in everything below the title line of $TEMPLATE_DIR/CLAUDE.md."
 fi
 if [ "$TEAM_CLAUDE_SKIPPED" = 1 ] && [ "$LOCAL_CREATED" = 1 ]; then
   echo "Team setup: CLAUDE.md already exists, so the shared team rules were not written."
   echo "  If it holds the relay-loop rules from a solo setup, switch with:"
-  printf '    mv %q %q && %q %q --team --name %q\n' "$TARGET_ABS/CLAUDE.md" "$TARGET_ABS/CLAUDE.local.md" "$SCRIPT_DIR/init.sh" "$TARGET_ABS" "$NAME"
+  printf '    mv %s %s && %s %s --team --lang %s --name %s\n' "$(shell_quote "$TARGET_ABS/CLAUDE.md")" "$(shell_quote "$TARGET_ABS/CLAUDE.local.md")" "$(shell_quote "$SCRIPT_DIR/init.sh")" "$(shell_quote "$TARGET_ABS")" "$LOOP_LANG" "$(shell_quote "$NAME")"
 fi
 if [ "$DRY_RUN" = 0 ]; then
   echo
-  echo "Next steps:"
-  echo "  1. Open Cowork on this folder: $TARGET_ABS"
-  echo "  2. Say: Read COWORK.md and onboard me."
-  echo "  3. Cowork will give you a \"Message to Claude Code\". Paste it into a new Claude Code session in the same folder."
+  # The next steps come in the project's language; <folder> stands for the project folder.
+  while IFS= read -r line || [ -n "$line" ]; do
+    case "$line" in
+      *"<folder>"*) printf '%s%s%s\n' "${line%%<folder>*}" "$TARGET_ABS" "${line#*<folder>}" ;;
+      *) printf '%s\n' "$line" ;;
+    esac
+  done <"$MESSAGES"
 fi

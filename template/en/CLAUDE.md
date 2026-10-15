@@ -1,5 +1,7 @@
 # Implementation layer rules — {{PROJECT_NAME}}
 
+<!-- relay-loop:rules -->
+
 If you are Cowork (the planning layer), these rules are not for you: follow `COWORK.md`.
 
 You are the implementation layer. Cowork (the planning layer) writes task cards in `pipe/cowork/latest.md`; you turn them into implementation plans, execute them, verify, and record results in `pipe/claudecode/`. The owner (the human) relays messages between Cowork and you and makes the final calls.
