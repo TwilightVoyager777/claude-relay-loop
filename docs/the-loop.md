@@ -1,5 +1,7 @@
 # One feature, start to finish
 
+English | [简体中文](the-loop.zh-CN.md)
+
 This walkthrough follows one feature through the loop in a made-up project, **Recipe Box**, a small web app for saving recipes. The messages below are examples of what you would actually paste.
 
 ## 0. Set up

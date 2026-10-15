@@ -1,5 +1,7 @@
 # Customizing
 
+English | [简体中文](customizing.zh-CN.md)
+
 ## AI attribution in commits and pull requests (`--no-attribution`)
 
 By default Claude Code adds a co-author line to commits and a note to pull request descriptions. `--no-attribution` writes `.claude/settings.json`:
@@ -30,20 +32,22 @@ The defaults are in `CLAUDE.md` (in `CLAUDE.local.md` with `--team`), under "Def
 - **Plan review.** The main session starts the sub-session right after writing the plan. To review a plan first, have Cowork write `Plan review: show me first` on that card, or change the default for every card.
 - **One sub-session per plan.** Split a plan only when its tasks are independent and touch different files.
 
-## Project files in another language
+## Language (`--lang`)
 
-The rule files are in English, and both layers already reply in your language. To have Cowork and Claude Code write the project's files (roadmap, plans, handoff records) in another language, change the "Files are written in" line at the top of `roadmap.md`, or ask Cowork to do it during onboarding.
+`--lang en` (the default) or `--lang zh` picks the language of everything `init.sh` writes: the rule files, the templates and the next steps it prints at the end. File names and structure are the same in both. Apart from the next steps, `init.sh`'s own output is in English either way.
+
+Both layers reply in the language you write to them in, whichever you pick. To have Cowork and Claude Code write the project's files (roadmap, plans, handoff records) in a third language, change the "Files are written in" line at the top of `roadmap.md`, or ask Cowork to do it during onboarding. The rule files themselves stay in English or Chinese.
 
 ## Adding the team add-on later
 
-Running `init.sh --team` on a project that already has the solo setup skips `CLAUDE.md`, because it exists, and prints the command to switch, with your paths and project name filled in. It looks like this:
+Running `init.sh --team` on a project that already has the solo setup skips `CLAUDE.md`, because it exists, and prints the command to switch, with your paths, language and project name filled in. Without `--lang`, `init.sh` keeps the language the project was set up in (it recognizes it from `COWORK.md`). The command looks like this:
 
 ```bash
-mv path/to/my-project/CLAUDE.md path/to/my-project/CLAUDE.local.md && claude-relay-loop/init.sh path/to/my-project --team --name "My Project"
+mv '/path/to/my-project/CLAUDE.md' '/path/to/my-project/CLAUDE.local.md' && '/path/to/claude-relay-loop/init.sh' '/path/to/my-project' --team --lang en --name 'My Project'
 ```
 
 `CLAUDE.local.md` then holds your own loop rules (git-ignored), and the new `CLAUDE.md` holds the shared rules for teammates.
 
 ## Updating the rules later
 
-`init.sh` doesn't update projects that already use the loop. To pick up newer rules, compare your files with the latest `template/` and merge by hand.
+`init.sh` doesn't update projects that already use the loop. To pick up newer rules, compare your files with the latest `template/en/` (or `template/zh-CN/`) and merge by hand. Keep the `<!-- relay-loop:rules -->` line in your `CLAUDE.md` (`CLAUDE.local.md` with `--team`): it's how `init.sh` knows the loop rules are there.

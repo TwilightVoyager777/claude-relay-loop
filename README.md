@@ -1,5 +1,7 @@
 # claude-relay-loop
 
+English | [简体中文](README.zh-CN.md)
+
 **A project scaffold for working with two Claude layers: Cowork plans, Claude Code builds, and you relay one short message each way per feature.**
 
 > Community project, not made, endorsed or supported by Anthropic. Claude, Claude Code and Cowork are Anthropic products.
@@ -57,6 +59,8 @@ my-project/
 
 Your code goes wherever you like. Cowork edits only the planning files; Claude Code edits the code and `pipe/claudecode/`.
 
+With `--lang zh` you get the same files, with the same names, written in Simplified Chinese.
+
 ## Requirements
 
 - The **Claude desktop app** with Cowork and Claude Code (the Code tab). Starting a sub-session from the main session needs the desktop app.
@@ -81,13 +85,14 @@ claude-relay-loop/init.sh ~/code/my-project --name "My Project"
 
 ### Existing projects
 
-Run the same command on the project's folder. `init.sh` never overwrites a file: anything that already exists, such as your own `CLAUDE.md`, is skipped and listed together with the scaffold's copy to merge from by hand. If your `CLAUDE.md` doesn't have the loop rules yet, `init.sh` says so: copy them in, or Claude Code won't follow the loop. Try `--dry-run` first to see what would happen.
+Run the same command on the project's folder. `init.sh` never overwrites a file: anything that already exists, such as your own `CLAUDE.md`, is skipped and listed together with the scaffold's copy to merge from by hand. If your `CLAUDE.md` doesn't have the loop rules yet, `init.sh` says so: copy them in, or Claude Code won't follow the loop. (It looks for the line `<!-- relay-loop:rules -->`, so keep that line when you copy.) Try `--dry-run` first to see what would happen.
 
 ## Options
 
 | Option | What it does |
 |---|---|
 | `--name "My Project"` | Project name used in the generated files (default: the folder name) |
+| `--lang zh` | Writes the generated files in Simplified Chinese. The default, `--lang en`, writes them in English. File names and structure are the same in both |
 | `--team` | Adds the team add-on: a shared `CLAUDE.md` for teammates (branch + pull request), your own loop rules in `CLAUDE.local.md` (git-ignored), `TEAM.md` for Cowork, a task-card template and a pull request template |
 | `--no-attribution` | Writes `.claude/settings.json` that turns off AI attribution in commits and pull requests |
 | `--auto-push` | Adds a hook that pushes the current branch after every commit Claude Code makes (needs `jq`) |
@@ -107,7 +112,7 @@ Writing a plan and executing it each produce a lot of context; keeping them apar
 The rules are written for Cowork. Another planning chat that can read and write the project folder could follow `COWORK.md` too, but only Cowork has been used in practice.
 
 **Which language?**
-The rule files are in English. Both layers reply in whatever language you write to them in, and Cowork can write your project files in another language if you ask during onboarding.
+English by default. `--lang zh` writes every generated file in Simplified Chinese instead, with the same file names and structure. Either way, both layers reply in whatever language you write to them in, and Cowork can write your project files in yet another language if you ask during onboarding.
 
 **Where does this come from?**
 It was extracted from a real project built with a small team over several weeks, where the loop was refined one feature at a time.
